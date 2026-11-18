@@ -3,7 +3,7 @@
  * Plugin Name: Live Frontend Text Editor
  * Plugin URI:  https://bk-fip.unm.ac.id/
  * Description: Plugin WordPress untuk mengedit judul dan teks konten artikel/halaman secara visual langsung pada frontend (Live WYSIWYG) tanpa membuka WP Admin.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Jurusan PPB / BK FIP UNM
  * License:     GPL-2.0+
  * Text Domain: wp-frontend-inline-editor
@@ -11,7 +11,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('WFIE_VERSION', '1.0.0');
+define('WFIE_VERSION', '1.1.0');
 define('WFIE_FILE', __FILE__);
 define('WFIE_PATH', plugin_dir_path(__FILE__));
 define('WFIE_URL', plugin_dir_url(__FILE__));
@@ -84,19 +84,23 @@ function wfie_enqueue_assets() {
     }
 
     $options = WFIE_Admin_Settings::get_options();
+    $css_path = WFIE_PATH . 'assets/css/editor-frontend.css';
+    $js_path  = WFIE_PATH . 'assets/js/editor-frontend.js';
+    $css_ver  = file_exists($css_path) ? WFIE_VERSION . '.' . filemtime($css_path) : WFIE_VERSION;
+    $js_ver   = file_exists($js_path)  ? WFIE_VERSION . '.' . filemtime($js_path)  : WFIE_VERSION;
 
     wp_enqueue_style(
         'wfie-editor-css',
         WFIE_URL . 'assets/css/editor-frontend.css',
         [],
-        WFIE_VERSION
+        $css_ver
     );
 
     wp_enqueue_script(
         'wfie-editor-js',
         WFIE_URL . 'assets/js/editor-frontend.js',
         [],
-        WFIE_VERSION,
+        $js_ver,
         true
     );
 
