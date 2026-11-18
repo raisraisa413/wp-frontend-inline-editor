@@ -186,6 +186,7 @@
                 self.contentEl.setAttribute('contenteditable', 'true');
                 self.contentEl.setAttribute('data-wfie-editable', 'true');
                 self.contentEl.addEventListener('input', self.onContentInput);
+                self.lockAdminManagedZones();
             }
 
             // Tampilkan tombol kontrol
@@ -193,7 +194,68 @@
             self.btnDiscard.style.display = 'inline-flex';
             self.statusLabel.textContent = wfieConfig.i18n.editModeOn || 'Mode Edit Aktif';
 
-            self.showToast('Mode Edit Aktif! Klik teks mana saja untuk mengedit.');
+            var hasLocked = self.contentEl && self.contentEl.querySelectorAll('.ppb-admin-managed-zone').length > 0;
+            if (hasLocked) {
+                self.showToast('Mode Edit Aktif! Teks berbingkai emas bisa diedit langsung; blok biru 🔒 diubah lewat WP Admin.');
+            } else {
+                self.showToast('Mode Edit Aktif! Klik teks mana saja untuk mengedit.');
+            }
+        },
+
+        lockAdminManagedZones: function () {
+            var self = this;
+            if (!self.contentEl) return;
+
+            // Fallback untuk grid dosen statis/tercache jika tidak memakai shortcode wrapper
+            var dosenGrid = self.contentEl.querySelector('.bk-dosen-grid');
+            if (dosenGrid && !dosenGrid.closest('.ppb-admin-managed-zone')) {
+                dosenGrid.classList.add('ppb-admin-managed-zone');
+                dosenGrid.setAttribute('data-ppb-admin-label', 'Direktori Dosen & SINTA');
+                dosenGrid.setAttribute('data-ppb-admin-url', (wfieConfig.adminUrl || '/wp-admin/') + 'admin.php?page=bk-direktori-dosen');
+            }
+
+            var zones = self.contentEl.querySelectorAll('.ppb-admin-managed-zone');
+            zones.forEach(function (zone) {
+                zone.setAttribute('contenteditable', 'false');
+
+                if (!zone.querySelector(':scope > .ppb-admin-managed-badge')) {
+                    var label = zone.getAttribute('data-ppb-admin-label') || 'Portal PPB FIP';
+                    var url = zone.getAttribute('data-ppb-admin-url') || (wfieConfig.adminUrl || '/wp-admin/') + 'admin.php?page=ppb-portal-hub';
+
+                    var badge = document.createElement('a');
+                    badge.className = 'ppb-admin-managed-badge';
+                    badge.href = url;
+                    badge.target = '_blank';
+                    badge.rel = 'noopener';
+                    badge.setAttribute('contenteditable', 'false');
+                    badge.title = 'Bagian ini dikelola dari database WP Admin. Klik untuk membuka halaman pengelolaannya.';
+                    badge.textContent = '🔒 Ubah via WP Admin: ' + label + ' ↗';
+                    zone.insertBefore(badge, zone.firstChild);
+                }
+
+                if (!zone.getAttribute('data-wfie-lock-bound')) {
+                    zone.setAttribute('data-wfie-lock-bound', 'true');
+                    zone.addEventListener('click', function (e) {
+                        if (!self.isEditing) return;
+                        if (e.target.closest('.ppb-admin-managed-badge')) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var lbl = zone.getAttribute('data-ppb-admin-label') || 'WP Admin';
+                        self.showToast('🔒 Bagian "' + lbl + '" diubah lewat WP Admin. Klik tombol biru di pojok blok.', true);
+                    });
+                }
+            });
+        },
+
+        unlockAdminManagedZones: function () {
+            var self = this;
+            if (!self.contentEl) return;
+            var badges = self.contentEl.querySelectorAll('.ppb-admin-managed-badge');
+            badges.forEach(function (b) { b.remove(); });
+            var zones = self.contentEl.querySelectorAll('.ppb-admin-managed-zone');
+            zones.forEach(function (zone) {
+                zone.removeAttribute('contenteditable');
+            });
         },
 
         disableEditMode: function () {
@@ -203,6 +265,8 @@
             document.body.classList.remove('wfie-editing-active');
             self.dockEl.classList.remove('wfie-editing');
             self.dockEl.classList.remove('wfie-dirty');
+
+            self.unlockAdminManagedZones();
 
             if (self.titleEl) {
                 self.titleEl.removeAttribute('contenteditable');
@@ -311,13 +375,35 @@
             }
 
             if (self.contentEl) {
+                var clone = self.contentEl.cloneNode(true);
+                clone.removeAttribute('contenteditable');
+                clone.removeAttribute('data-wfie-editable');
+
+                // Hapus badge UI editor agar tidak ikut tersimpan ke database
+                clone.querySelectorAll('.ppb-admin-managed-badge').forEach(function (b) {
+                    b.remove();
+                });
+
+                // Kembalikan blok shortcode dinamis ke tag [ppb_...] aslinya
+                clone.querySelectorAll('.ppb-admin-managed-zone[data-ppb-shortcode]').forEach(function (zone) {
+                    var rawShortcode = zone.getAttribute('data-ppb-shortcode');
+                    if (rawShortcode && zone.parentNode) {
+                        zone.parentNode.replaceChild(document.createTextNode(rawShortcode), zone);
+                    }
+                });
+
+                // Bersihkan sisa atribut editor di dalam clone
+                clone.querySelectorAll('[contenteditable]').forEach(function (el) {
+                    el.removeAttribute('contenteditable');
+                });
+                clone.querySelectorAll('[data-wfie-lock-bound]').forEach(function (el) {
+                    el.removeAttribute('data-wfie-lock-bound');
+                });
+
                 if (self.contentEl.classList.contains('bk-page-wrapper')) {
-                    var clone = self.contentEl.cloneNode(true);
-                    clone.removeAttribute('contenteditable');
-                    clone.removeAttribute('data-wfie-editable');
                     payload.post_content = clone.outerHTML;
                 } else {
-                    payload.post_content = self.contentEl.innerHTML;
+                    payload.post_content = clone.innerHTML;
                 }
             }
 

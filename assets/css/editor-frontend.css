@@ -149,6 +149,53 @@
 }
 
 /* ========================================================================== */
+/* 2B. PENANDA BAGIAN YANG HARUS DIUBAH LEWAT WP ADMIN (LOCKED / DINAMIS)     */
+/* ========================================================================== */
+.wfie-editing-active .ppb-admin-managed-zone {
+    position: relative !important;
+    outline: 2px dashed #0284c7 !important;
+    outline-offset: 4px !important;
+    border-radius: 12px !important;
+    background-color: rgba(2, 132, 199, 0.03) !important;
+    cursor: not-allowed !important;
+    user-select: none !important;
+}
+
+.wfie-editing-active .ppb-admin-managed-zone * {
+    cursor: not-allowed !important;
+}
+
+.wfie-editing-active .ppb-admin-managed-badge {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 999999 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: #0369a1 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #bae6fd !important;
+    padding: 6px 14px !important;
+    border-radius: 9999px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+    box-shadow: 0 6px 18px rgba(3, 105, 161, 0.35) !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+
+.wfie-editing-active .ppb-admin-managed-badge:hover {
+    background: #0c4a6e !important;
+    color: #F5B82E !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ========================================================================== */
 /* 3. FLOATING RICH TEXT TOOLBAR (MEDIUM / NOTION STYLE)                      */
 /* ========================================================================== */
 .wfie-floating-toolbar {

@@ -102,6 +102,7 @@ function wfie_enqueue_assets() {
 
     wp_localize_script('wfie-editor-js', 'wfieConfig', [
         'restUrl'         => esc_url_raw(rest_url('wfie/v1/save')),
+        'adminUrl'        => esc_url_raw(admin_url()),
         'nonce'           => wp_create_nonce('wp_rest'),
         'postId'          => get_the_ID(),
         'titleSelector'   => $options['title_selector'],
