@@ -167,6 +167,9 @@ function wfie_render_floating_dock() {
         <button type="button" id="wfie-btn-link" title="Sisipkan Tautan URL">🔗 Link</button>
     </div>
 
+    <!-- Floating Cursor Hover Indicator -->
+    <div id="wfie-hover-pill" class="wfie-hover-pill" style="display:none;"></div>
+
     <!-- Toast Notification -->
     <div id="wfie-toast" class="wfie-toast" style="display:none;"></div>
     <?php

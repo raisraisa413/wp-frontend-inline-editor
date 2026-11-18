@@ -36,6 +36,7 @@
             self.btnSave     = document.getElementById('wfie-btn-save');
             self.btnDiscard  = document.getElementById('wfie-btn-discard');
             self.toastEl     = document.getElementById('wfie-toast');
+            self.hoverPill   = document.getElementById('wfie-hover-pill');
 
             if (!self.dockEl) return;
 
@@ -52,7 +53,7 @@
         findElements: function () {
             var self = this;
             var titleSel = wfieConfig.titleSelector || 'h1.entry-title, h1.page-title, .entry-title, h1:first-of-type';
-            var contentSel = wfieConfig.contentSelector || '.entry-content, .post-content, main article, main, .bk-content-wrap';
+            var contentSel = wfieConfig.contentSelector || '.ppb-article-body, .bk-page-wrapper, .entry-content, .post-content, main article, main, .bk-content-wrap';
 
             self.titleEl = document.querySelector(titleSel);
             self.contentEl = document.querySelector(contentSel);
@@ -108,11 +109,47 @@
             // Cegah klik link membuka halaman lain saat sedang dalam Mode Edit
             document.addEventListener('click', function (e) {
                 if (!self.isEditing) return;
+                if (e.target.closest('.ppb-admin-managed-badge')) return;
                 var link = e.target.closest('[data-wfie-editable="true"] a');
                 if (link) {
                     e.preventDefault();
                 }
             }, true);
+
+            // Indikator Kursor Langsung (Editable vs Diubah via WP Admin)
+            document.addEventListener('mousemove', function (e) {
+                if (!self.isEditing || !self.hoverPill) return;
+                var target = e.target;
+                if (!target || target.closest('#wfie-dock') || target.closest('#wfie-toolbar') || target.closest('#wpadminbar')) {
+                    self.hoverPill.style.display = 'none';
+                    return;
+                }
+
+                var lockedZone = target.closest('.ppb-admin-managed-zone');
+                var editableZone = target.closest('[data-wfie-editable="true"]');
+
+                if (lockedZone) {
+                    var lbl = lockedZone.getAttribute('data-ppb-admin-label') || 'WP Admin';
+                    self.hoverPill.className = 'wfie-hover-pill is-locked';
+                    self.hoverPill.textContent = '🔒 Tidak bisa diedit langsung · Ubah via WP Admin: ' + lbl;
+                } else if (editableZone) {
+                    self.hoverPill.className = 'wfie-hover-pill is-editable';
+                    self.hoverPill.textContent = '✏️ Bisa diedit langsung (klik untuk ubah)';
+                } else {
+                    self.hoverPill.style.display = 'none';
+                    return;
+                }
+
+                var x = Math.min(e.clientX + 16, window.innerWidth - 320);
+                var y = Math.min(e.clientY + 18, window.innerHeight - 40);
+                self.hoverPill.style.left = Math.max(8, x) + 'px';
+                self.hoverPill.style.top = Math.max(8, y) + 'px';
+                self.hoverPill.style.display = 'block';
+            });
+
+            document.addEventListener('mouseleave', function () {
+                if (self.hoverPill) self.hoverPill.style.display = 'none';
+            });
 
             // Floating Selection Toolbar Handling
             document.addEventListener('selectionchange', function () {
@@ -171,7 +208,17 @@
             document.body.classList.add('wfie-editing-active');
             self.dockEl.classList.add('wfie-editing');
 
+            var isPageLocked = (self.contentEl && self.contentEl.getAttribute('data-wfie-page-locked') === 'true');
             var titleInsideContent = (self.contentEl && self.titleEl && self.contentEl.contains(self.titleEl));
+
+            if (isPageLocked) {
+                self.lockAdminManagedZones(true);
+                self.btnSave.style.display = 'none';
+                self.btnDiscard.style.display = 'none';
+                self.statusLabel.textContent = 'Mode Inspeksi (Ubah via WP Admin)';
+                self.showToast('ℹ️ Halaman ini dikelola lewat WP Admin. Arahkan kursor atau klik tombol biru 🔒 pada tiap bagian.', true);
+                return;
+            }
 
             // Simpan snapshot asli untuk fitur batal
             if (self.titleEl && !titleInsideContent) {
@@ -186,7 +233,7 @@
                 self.contentEl.setAttribute('contenteditable', 'true');
                 self.contentEl.setAttribute('data-wfie-editable', 'true');
                 self.contentEl.addEventListener('input', self.onContentInput);
-                self.lockAdminManagedZones();
+                self.lockAdminManagedZones(false);
             }
 
             // Tampilkan tombol kontrol
@@ -202,7 +249,7 @@
             }
         },
 
-        lockAdminManagedZones: function () {
+        lockAdminManagedZones: function (includeSelfIfZone) {
             var self = this;
             if (!self.contentEl) return;
 
@@ -214,7 +261,10 @@
                 dosenGrid.setAttribute('data-ppb-admin-url', (wfieConfig.adminUrl || '/wp-admin/') + 'admin.php?page=bk-direktori-dosen');
             }
 
-            var zones = self.contentEl.querySelectorAll('.ppb-admin-managed-zone');
+            var zones = Array.prototype.slice.call(self.contentEl.querySelectorAll('.ppb-admin-managed-zone'));
+            if (includeSelfIfZone && zones.length === 0 && self.contentEl.classList.contains('ppb-admin-managed-zone')) {
+                zones.push(self.contentEl);
+            }
             zones.forEach(function (zone) {
                 zone.setAttribute('contenteditable', 'false');
 
@@ -256,6 +306,9 @@
             zones.forEach(function (zone) {
                 zone.removeAttribute('contenteditable');
             });
+            if (self.contentEl.classList.contains('ppb-admin-managed-zone')) {
+                self.contentEl.removeAttribute('contenteditable');
+            }
         },
 
         disableEditMode: function () {
@@ -265,6 +318,7 @@
             document.body.classList.remove('wfie-editing-active');
             self.dockEl.classList.remove('wfie-editing');
             self.dockEl.classList.remove('wfie-dirty');
+            if (self.hoverPill) self.hoverPill.style.display = 'none';
 
             self.unlockAdminManagedZones();
 

@@ -189,10 +189,45 @@
     transition: transform 0.15s ease, background-color 0.15s ease !important;
 }
 
+.wfie-editing-active .ppb-admin-managed-zone:hover {
+    outline: 3px solid #0284c7 !important;
+    background-color: rgba(2, 132, 199, 0.06) !important;
+}
+
 .wfie-editing-active .ppb-admin-managed-badge:hover {
     background: #0c4a6e !important;
     color: #F5B82E !important;
     transform: translateY(-1px) !important;
+}
+
+/* ========================================================================== */
+/* 2C. FLOATING CURSOR HOVER PILL (INDIKATOR BISA DIEDIT / HARUS VIA ADMIN)  */
+/* ========================================================================== */
+.wfie-hover-pill {
+    position: fixed;
+    z-index: 10000002;
+    pointer-events: none;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transition: opacity 0.1s ease;
+}
+
+.wfie-hover-pill.is-editable {
+    background: #0D3B22;
+    color: #F5B82E;
+    border: 1.5px solid #F5B82E;
+}
+
+.wfie-hover-pill.is-locked {
+    background: #0369a1;
+    color: #ffffff;
+    border: 1.5px solid #bae6fd;
 }
 
 /* ========================================================================== */
