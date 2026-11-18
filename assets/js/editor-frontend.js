@@ -311,7 +311,14 @@
             }
 
             if (self.contentEl) {
-                payload.post_content = self.contentEl.innerHTML;
+                if (self.contentEl.classList.contains('bk-page-wrapper')) {
+                    var clone = self.contentEl.cloneNode(true);
+                    clone.removeAttribute('contenteditable');
+                    clone.removeAttribute('data-wfie-editable');
+                    payload.post_content = clone.outerHTML;
+                } else {
+                    payload.post_content = self.contentEl.innerHTML;
+                }
             }
 
             fetch(wfieConfig.restUrl, {
