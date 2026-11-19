@@ -3,7 +3,7 @@
  * Plugin Name: Live Frontend Text Editor
  * Plugin URI:  https://bk-fip.unm.ac.id/
  * Description: Plugin WordPress untuk mengedit judul dan teks konten artikel/halaman secara visual langsung pada frontend (Live WYSIWYG) tanpa membuka WP Admin.
- * Version:     1.1.0
+ * Version:     1.1.1
  * Author:      Jurusan PPB / BK FIP UNM
  * License:     GPL-2.0+
  * Text Domain: wp-frontend-inline-editor
@@ -11,7 +11,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('WFIE_VERSION', '1.1.0');
+define('WFIE_VERSION', '1.1.1');
 define('WFIE_FILE', __FILE__);
 define('WFIE_PATH', plugin_dir_path(__FILE__));
 define('WFIE_URL', plugin_dir_url(__FILE__));

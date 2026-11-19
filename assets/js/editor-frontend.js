@@ -107,32 +107,53 @@
             });
 
             // Cegah klik link membuka halaman lain saat sedang dalam Mode Edit
+            // Cegah klik link membuka halaman lain saat sedang dalam Mode Edit (kecuali tombol WP Admin & navigasi sub-link)
+            var navUiSelector = '.bk-crumb, nav, [role="navigation"], [role="tablist"], .bk-tabs, .bk-tab-btn, .bk-seg-control, .bk-seg-btn, .bk-filter-pills, .bk-stat-tabs-container, .bk-subnav, .bk-btn, button, input, select, textarea, svg';
             document.addEventListener('click', function (e) {
                 if (!self.isEditing) return;
-                if (e.target.closest('.ppb-admin-managed-badge')) return;
+                if (e.target.closest('.ppb-admin-managed-badge') || e.target.closest('[data-wfie-ui-locked="true"]') || e.target.closest(navUiSelector)) return;
                 var link = e.target.closest('[data-wfie-editable="true"] a');
                 if (link) {
                     e.preventDefault();
                 }
             }, true);
 
-            // Indikator Kursor Langsung (Editable vs Diubah via WP Admin)
+            // Indikator Kursor Langsung (Editable vs Diubah via WP Admin vs Sub-link Navigasi)
             document.addEventListener('mousemove', function (e) {
                 if (!self.isEditing || !self.hoverPill) return;
                 var target = e.target;
-                if (!target || target.closest('#wfie-dock') || target.closest('#wfie-toolbar') || target.closest('#wpadminbar')) {
+                if (!target || target.nodeType !== 1 || target.closest('#wfie-dock') || target.closest('#wfie-toolbar') || target.closest('#wpadminbar')) {
                     self.hoverPill.style.display = 'none';
                     return;
                 }
 
                 var lockedZone = target.closest('.ppb-admin-managed-zone');
+                var uiLocked = target.closest('[data-wfie-ui-locked="true"]') || target.closest(navUiSelector);
                 var editableZone = target.closest('[data-wfie-editable="true"]');
 
                 if (lockedZone) {
                     var lbl = lockedZone.getAttribute('data-ppb-admin-label') || 'WP Admin';
                     self.hoverPill.className = 'wfie-hover-pill is-locked';
                     self.hoverPill.textContent = '🔒 Tidak bisa diedit langsung · Ubah via WP Admin: ' + lbl;
+                } else if (uiLocked) {
+                    self.hoverPill.className = 'wfie-hover-pill is-nav';
+                    self.hoverPill.textContent = '🔗 Sub-link / Navigasi (tidak diedit di sini)';
                 } else if (editableZone) {
+                    var isTextEl = !!target.closest('h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, dt, dd, strong, em, span, small');
+                    if (!isTextEl) {
+                        var hasDirectText = false;
+                        for (var n = 0; n < target.childNodes.length; n++) {
+                            if (target.childNodes[n].nodeType === 3 && target.childNodes[n].nodeValue.trim().length > 0) {
+                                hasDirectText = true;
+                                break;
+                            }
+                        }
+                        isTextEl = hasDirectText;
+                    }
+                    if (!isTextEl) {
+                        self.hoverPill.style.display = 'none';
+                        return;
+                    }
                     self.hoverPill.className = 'wfie-hover-pill is-editable';
                     self.hoverPill.textContent = '✏️ Bisa diedit langsung (klik untuk ubah)';
                 } else {
@@ -261,12 +282,16 @@
                 dosenGrid.setAttribute('data-ppb-admin-url', (wfieConfig.adminUrl || '/wp-admin/') + 'admin.php?page=bk-direktori-dosen');
             }
 
-            // Kunci elemen navigasi, breadcrumb, sub-link tab, dan kontrol UI agar tidak ikut teredit
-            var uiLockedSel = '.bk-crumb, nav, [role="navigation"], [role="tablist"], .bk-tabs, .bk-seg-control, .bk-filter-pills, .bk-stat-tabs-container, .bk-subnav, button, input, select, textarea, svg';
+            // Kunci elemen navigasi, breadcrumb, sub-link tab, pill menu, dan kontrol UI agar tidak ikut teredit
+            var uiLockedSel = '.bk-crumb, nav, [role="navigation"], [role="tablist"], .bk-tabs, .bk-tab-btn, .bk-seg-control, .bk-seg-btn, .bk-filter-pills, .bk-stat-tabs-container, .bk-subnav, .bk-btn, button, input, select, textarea, svg';
             self.contentEl.querySelectorAll(uiLockedSel).forEach(function (el) {
                 if (el.closest('.ppb-admin-managed-zone')) return;
                 el.setAttribute('contenteditable', 'false');
                 el.setAttribute('data-wfie-ui-locked', 'true');
+                if (el.classList.contains('bk-seg-control') && el.parentElement && el.parentElement.children.length === 1) {
+                    el.parentElement.setAttribute('contenteditable', 'false');
+                    el.parentElement.setAttribute('data-wfie-ui-locked', 'true');
+                }
             });
 
             var zones = Array.prototype.slice.call(self.contentEl.querySelectorAll('.ppb-admin-managed-zone'));
