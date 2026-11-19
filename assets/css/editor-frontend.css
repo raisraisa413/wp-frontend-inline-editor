@@ -230,6 +230,22 @@
     border: 1.5px solid #bae6fd;
 }
 
+.wfie-hover-pill.is-nav {
+    background: #334155;
+    color: #f1f5f9;
+    border: 1.5px solid #94a3b8;
+}
+
+.wfie-editing-active [data-wfie-ui-locked="true"] {
+    cursor: default !important;
+    user-select: none !important;
+}
+
+.wfie-editing-active [data-wfie-ui-locked="true"] a,
+.wfie-editing-active [data-wfie-ui-locked="true"] button {
+    cursor: pointer !important;
+}
+
 /* ========================================================================== */
 /* 3. FLOATING RICH TEXT TOOLBAR (MEDIUM / NOTION STYLE)                      */
 /* ========================================================================== */

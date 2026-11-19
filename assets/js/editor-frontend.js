@@ -261,6 +261,14 @@
                 dosenGrid.setAttribute('data-ppb-admin-url', (wfieConfig.adminUrl || '/wp-admin/') + 'admin.php?page=bk-direktori-dosen');
             }
 
+            // Kunci elemen navigasi, breadcrumb, sub-link tab, dan kontrol UI agar tidak ikut teredit
+            var uiLockedSel = '.bk-crumb, nav, [role="navigation"], [role="tablist"], .bk-tabs, .bk-seg-control, .bk-filter-pills, .bk-stat-tabs-container, .bk-subnav, button, input, select, textarea, svg';
+            self.contentEl.querySelectorAll(uiLockedSel).forEach(function (el) {
+                if (el.closest('.ppb-admin-managed-zone')) return;
+                el.setAttribute('contenteditable', 'false');
+                el.setAttribute('data-wfie-ui-locked', 'true');
+            });
+
             var zones = Array.prototype.slice.call(self.contentEl.querySelectorAll('.ppb-admin-managed-zone'));
             if (includeSelfIfZone && zones.length === 0 && self.contentEl.classList.contains('ppb-admin-managed-zone')) {
                 zones.push(self.contentEl);
@@ -305,6 +313,10 @@
             var zones = self.contentEl.querySelectorAll('.ppb-admin-managed-zone');
             zones.forEach(function (zone) {
                 zone.removeAttribute('contenteditable');
+            });
+            self.contentEl.querySelectorAll('[data-wfie-ui-locked]').forEach(function (el) {
+                el.removeAttribute('contenteditable');
+                el.removeAttribute('data-wfie-ui-locked');
             });
             if (self.contentEl.classList.contains('ppb-admin-managed-zone')) {
                 self.contentEl.removeAttribute('contenteditable');
@@ -452,6 +464,9 @@
                 });
                 clone.querySelectorAll('[data-wfie-lock-bound]').forEach(function (el) {
                     el.removeAttribute('data-wfie-lock-bound');
+                });
+                clone.querySelectorAll('[data-wfie-ui-locked]').forEach(function (el) {
+                    el.removeAttribute('data-wfie-ui-locked');
                 });
 
                 if (self.contentEl.classList.contains('bk-page-wrapper')) {
